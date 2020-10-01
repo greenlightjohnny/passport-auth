@@ -1,5 +1,14 @@
 const express = require("express");
 const router = express.Router();
+const bcrypt = require("bcrypt");
+
+///User model, mongoose
+//Using capital because it is a class
+const User = require("../models/User");
+const expressEjsLayouts = require("express-ejs-layouts");
+
+///Encrypt password
+const saltRounds = 10;
 
 ///Login page
 router.get("/login/", (req, res) => res.render("login"));
@@ -38,12 +47,49 @@ router.post("/register/", (req, res) => {
       password2,
     });
   } else {
-    res.send("Passed");
-  }
-  ///
-  console.log("POST req", req.body);
+    ///if no validation, send data to MongoDB using mongoose model. Checks mongooseDB for username to make sure not registered. findONe returns a promise
+    User.findOne({ email: email }).then((user) => {
+      if (user) {
+        errors.push({ msg: "Username/email already exists, try another" });
+        res.render("register", {
+          errors,
+          name,
+          email,
+          password,
+          password2,
+        });
+      } else {
+        //if there is no registered email encrypt password
+        // console.log(process.env.MY_SALT);
+        // const epass = bcrypt.genSalt(saltRounds, (err, salt) => {
+        //   bcrypt.hash(password, process.env.MY_SALT, (err, hash) => {
+        //     console.log("44444444", epass);
+        //   });
+        // });
+        // console.log(epass);
+        const newUser = new User({
+          name,
+          email,
+          password,
+        });
 
-  res.send(errors.msg);
+        bcrypt.genSalt(10, (err, salt) =>
+          bcrypt.hash(newUser.password, salt, (err, hash) => {
+            if (err) throw err;
+            //sets the User object password to the hash that you created
+            newUser.password = hash;
+            ///save the user after the password change
+            newUser
+              .save()
+              .then((user) => {
+                res.redirect("/users/login/");
+              })
+              .catch((err) => console.log(err));
+          })
+        );
+      }
+    });
+  }
 });
 
 module.exports = router;
