@@ -1,11 +1,16 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const flash = require("connect-flash");
+const session = require("express-session");
 const expressLayouts = require("express-ejs-layouts");
 const mainRoutes = require("./routes/index");
 const userRoutes = require("./routes/users");
 const { MongoURI } = require("./config/keys");
+const passport = require("passport");
 const app = express();
 require("dotenv").config();
+const passsport = require("passport");
+require("./config/passport")(passport);
 
 const mongURI = process.env.MONGO_URI;
 
@@ -22,6 +27,29 @@ app.use(express.urlencoded({ extended: false }));
 
 app.use(express.static(__dirname + "/public"));
 app.use("/public", express.static("public"));
+
+/////express-session middleware
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: true,
+    saveUninitialized: true,
+  })
+);
+
+////Passport middleware!
+app.use(passport.initialize());
+app.use(passport.session());
+
+///Connect flash middleware!
+app.use(flash());
+
+///set global vars for??
+app.use((req, res, next) => {
+  res.locals.success_msg = req.flash("success_msg");
+  res.locals.error_msg = req.flash("error_msg");
+  next();
+});
 
 //Routes!
 app.use("/", mainRoutes);
