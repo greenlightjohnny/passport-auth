@@ -14,6 +14,12 @@ app.use(expressLayouts);
 //Set view engine
 app.set("view engine", "ejs");
 
+///Body parser middleware this is for POST/PUT requests, parsing JSON into JS objects that were sent to the server by the client.You don't need for GET or DELETE requests.
+// a. express.json() is a method inbuilt in express to recognize the incoming Request Object as a JSON Object. This method is called as a middleware in your application using the code: app.use(express.json());
+
+// b. express.urlencoded() is a method inbuilt in express to recognize the incoming Request Object as strings or arrays. This method is called as a middleware in your application using the code: app.use(express.urlencoded());
+app.use(express.urlencoded({ extended: false }));
+
 app.use(express.static(__dirname + "/public"));
 app.use("/public", express.static("public"));
 
