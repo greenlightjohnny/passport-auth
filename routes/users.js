@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
+const passport = require("passport");
 
 ///User model, mongoose
 //Using capital because it is a class
@@ -91,6 +92,22 @@ router.post("/register/", (req, res) => {
       }
     });
   }
+});
+
+///////////Handle post req to login page
+router.post("/login", (req, res, next) => {
+  passport.authenticate("local", {
+    successRedirect: "/dashboard/",
+    failureRedirect: "/users/login/",
+    failureFlash: true,
+  })(req, res, next);
+});
+
+///handle logout req.
+router.get("/logout/", (req, res) => {
+  req.logout();
+  req.flash("success_msg", "You are now logged out");
+  res.redirect("/users/login/");
 });
 
 module.exports = router;
